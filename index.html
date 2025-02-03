@@ -3,16 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rocket Adventure</title>
+    <title>Rocket Flight Game</title>
     <style>
-        body { text-align: center; background: black; color: white; font-family: Arial, sans-serif; }
-        canvas { background: #111; display: block; margin: auto; border: 2px solid white; }
+        body {
+            text-align: center;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevents scrolling */
+        }
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 80vh; /* 80% of screen for game */
+            overflow: hidden;
+            background: #111;
+            margin: auto;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #controls {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .control-btn {
+            display: inline-block;
+            width: 40%;
+            padding: 15px;
+            font-size: 18px;
+            background: #444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 10px;
+        }
+        .control-btn:active {
+            background: #666;
+        }
     </style>
 </head>
 <body>
-    <h1>🚀 Rocket Adventure</h1>
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
-    <p>Use arrow keys to move. Collect stars ⭐, avoid asteroids & aliens!</p>
+    <h1>🚀 Rocket Flight</h1>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <div id="controls">
+        <button class="control-btn" id="leftBtn">⬅ Left</button>
+        <button class="control-btn" id="rightBtn">Right ➡</button>
+    </div>
     <script src="game.js"></script>
 </body>
 </html>
