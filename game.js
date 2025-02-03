@@ -1,11 +1,28 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Game Constants
-const rocketSpeed = 3;
-const enemySpeed = 2;
-const starCount = 5;
-const enemyCount = 3;
+// Auto-size canvas
+function resizeCanvas() {
+    canvas.width = document.getElementById("gameContainer").clientWidth;
+    canvas.height = document.getElementById("gameContainer").clientHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// Rocket Properties
+const rocket = {
+    x: canvas.width / 2 - 25,
+    y: canvas.height - 80,
+    width: 50,
+    height: 70,
+    speed: 6
+};
+
+// Obstacles (Asteroids & Aliens)
+let obstacles = [];
+let obstacleSpeed = 3;
+let score = 0;
+let gameOver = false;
 
 // Load Images
 const rocketImg = new Image();
@@ -17,66 +34,58 @@ asteroidImg.src = "https://upload.wikimedia.org/wikipedia/commons/e/e3/Asteroid_
 const alienImg = new Image();
 alienImg.src = "https://upload.wikimedia.org/wikipedia/commons/4/4f/Alien_Emoji.png";
 
-// Player Rocket
-let rocket = { x: 50, y: 50, width: 40, height: 40 };
+// Controls (Touch & Buttons)
+let moveLeft = false, moveRight = false;
+document.getElementById("leftBtn").addEventListener("touchstart", () => moveLeft = true);
+document.getElementById("leftBtn").addEventListener("touchend", () => moveLeft = false);
+document.getElementById("rightBtn").addEventListener("touchstart", () => moveRight = true);
+document.getElementById("rightBtn").addEventListener("touchend", () => moveRight = false);
 
-// Enemies (Asteroids and Aliens)
-let enemies = [];
-for (let i = 0; i < enemyCount; i++) {
-    enemies.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        width: 40,
-        height: 40,
-        type: Math.random() > 0.5 ? "asteroid" : "alien",
-        dx: (Math.random() > 0.5 ? 1 : -1) * enemySpeed,
-        dy: (Math.random() > 0.5 ? 1 : -1) * enemySpeed
-    });
-}
-
-// Stars for collection
-let stars = [];
-for (let i = 0; i < starCount; i++) {
-    stars.push({
-        x: Math.random() * (canvas.width - 20),
-        y: Math.random() * (canvas.height - 20),
-        width: 20,
-        height: 20
-    });
-}
-
-// Game State
-let score = 0;
-let gameOver = false;
-
-// Keyboard Controls
-let keys = {};
-window.addEventListener("keydown", (e) => keys[e.key] = true);
-window.addEventListener("keyup", (e) => keys[e.key] = false);
+// Keyboard Controls (For Desktop)
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") moveLeft = true;
+    if (e.key === "ArrowRight") moveRight = true;
+});
+document.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowLeft") moveLeft = false;
+    if (e.key === "ArrowRight") moveRight = false;
+});
 
 // Update Rocket Position
 function updateRocket() {
-    if (keys["ArrowUp"] && rocket.y > 0) rocket.y -= rocketSpeed;
-    if (keys["ArrowDown"] && rocket.y + rocket.height < canvas.height) rocket.y += rocketSpeed;
-    if (keys["ArrowLeft"] && rocket.x > 0) rocket.x -= rocketSpeed;
-    if (keys["ArrowRight"] && rocket.x + rocket.width < canvas.width) rocket.x += rocketSpeed;
+    if (moveLeft && rocket.x > 0) rocket.x -= rocket.speed;
+    if (moveRight && rocket.x + rocket.width < canvas.width) rocket.x += rocket.speed;
 }
 
-// Update Enemies
-function updateEnemies() {
-    enemies.forEach(enemy => {
-        enemy.x += enemy.dx;
-        enemy.y += enemy.dy;
+// Generate Obstacles
+function spawnObstacle() {
+    let type = Math.random() > 0.5 ? "asteroid" : "alien";
+    obstacles.push({
+        x: Math.random() * (canvas.width - 50),
+        y: -60,
+        width: 50,
+        height: 50,
+        speed: obstacleSpeed,
+        type: type
+    });
+}
 
-        // Bounce off walls
-        if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) enemy.dx *= -1;
-        if (enemy.y <= 0 || enemy.y + enemy.height >= canvas.height) enemy.dy *= -1;
+// Update Obstacles
+function updateObstacles() {
+    for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].y += obstacles[i].speed;
 
-        // Check collision with player
-        if (isColliding(rocket, enemy)) {
+        // Collision Detection
+        if (isColliding(rocket, obstacles[i])) {
             gameOver = true;
         }
-    });
+
+        // Remove Off-Screen Obstacles
+        if (obstacles[i].y > canvas.height) {
+            obstacles.splice(i, 1);
+            score++;
+        }
+    }
 }
 
 // Check Collision
@@ -87,37 +96,16 @@ function isColliding(obj1, obj2) {
            obj1.y + obj1.height > obj2.y;
 }
 
-// Collect Stars
-function collectStars() {
-    for (let i = 0; i < stars.length; i++) {
-        if (isColliding(rocket, stars[i])) {
-            score++;
-            stars.splice(i, 1);
-            break;
-        }
-    }
-}
-
 // Draw Rocket
 function drawRocket() {
     ctx.drawImage(rocketImg, rocket.x, rocket.y, rocket.width, rocket.height);
 }
 
-// Draw Enemies
-function drawEnemies() {
-    enemies.forEach(enemy => {
-        let img = enemy.type === "asteroid" ? asteroidImg : alienImg;
-        ctx.drawImage(img, enemy.x, enemy.y, enemy.width, enemy.height);
-    });
-}
-
-// Draw Stars
-function drawStars() {
-    ctx.fillStyle = "yellow";
-    stars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x + 10, star.y + 10, 10, 0, Math.PI * 2);
-        ctx.fill();
+// Draw Obstacles
+function drawObstacles() {
+    obstacles.forEach(obstacle => {
+        let img = obstacle.type === "asteroid" ? asteroidImg : alienImg;
+        ctx.drawImage(img, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
     });
 }
 
@@ -125,7 +113,7 @@ function drawStars() {
 function drawScore() {
     ctx.fillStyle = "white";
     ctx.font = "18px Arial";
-    ctx.fillText(`Score: ${score}`, 10, 20);
+    ctx.fillText(`Score: ${score}`, 10, 30);
 }
 
 // Game Loop
@@ -139,14 +127,19 @@ function gameLoop() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     updateRocket();
-    updateEnemies();
-    collectStars();
-    drawStars();
+    updateObstacles();
     drawRocket();
-    drawEnemies();
+    drawObstacles();
     drawScore();
+
     requestAnimationFrame(gameLoop);
 }
+
+// Spawn Obstacles Every 1.5 Seconds
+setInterval(spawnObstacle, 1500);
+
+// Increase Speed Every 10 Seconds
+setInterval(() => { obstacleSpeed += 1; }, 10000);
 
 // Start Game
 gameLoop();
