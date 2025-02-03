@@ -18,21 +18,18 @@ const rocket = {
     speed: 6
 };
 
-// Obstacles (Asteroids & Aliens)
-let obstacles = [];
-let obstacleSpeed = 3;
+// Obstacles (Asteroids)
+let asteroids = [];
+let asteroidSpeed = 3;
 let score = 0;
 let gameOver = false;
 
 // Load Images
 const rocketImg = new Image();
-rocketImg.src = "https://upload.wikimedia.org/wikipedia/commons/3/3d/Rocket-icon.svg";
+rocketImg.src = "assets/rocket.png";  // Ensure this matches your uploaded path
 
 const asteroidImg = new Image();
-asteroidImg.src = "https://upload.wikimedia.org/wikipedia/commons/e/e3/Asteroid_icon.svg";
-
-const alienImg = new Image();
-alienImg.src = "https://upload.wikimedia.org/wikipedia/commons/4/4f/Alien_Emoji.png";
+asteroidImg.src = "assets/asteroid.png";  // Ensure this matches your uploaded path
 
 // Controls (Touch & Buttons)
 let moveLeft = false, moveRight = false;
@@ -57,32 +54,30 @@ function updateRocket() {
     if (moveRight && rocket.x + rocket.width < canvas.width) rocket.x += rocket.speed;
 }
 
-// Generate Obstacles
-function spawnObstacle() {
-    let type = Math.random() > 0.5 ? "asteroid" : "alien";
-    obstacles.push({
+// Generate Asteroids
+function spawnAsteroid() {
+    asteroids.push({
         x: Math.random() * (canvas.width - 50),
         y: -60,
         width: 50,
         height: 50,
-        speed: obstacleSpeed,
-        type: type
+        speed: asteroidSpeed
     });
 }
 
-// Update Obstacles
-function updateObstacles() {
-    for (let i = 0; i < obstacles.length; i++) {
-        obstacles[i].y += obstacles[i].speed;
+// Update Asteroids
+function updateAsteroids() {
+    for (let i = 0; i < asteroids.length; i++) {
+        asteroids[i].y += asteroids[i].speed;
 
         // Collision Detection
-        if (isColliding(rocket, obstacles[i])) {
+        if (isColliding(rocket, asteroids[i])) {
             gameOver = true;
         }
 
-        // Remove Off-Screen Obstacles
-        if (obstacles[i].y > canvas.height) {
-            obstacles.splice(i, 1);
+        // Remove Off-Screen Asteroids
+        if (asteroids[i].y > canvas.height) {
+            asteroids.splice(i, 1);
             score++;
         }
     }
@@ -101,11 +96,10 @@ function drawRocket() {
     ctx.drawImage(rocketImg, rocket.x, rocket.y, rocket.width, rocket.height);
 }
 
-// Draw Obstacles
-function drawObstacles() {
-    obstacles.forEach(obstacle => {
-        let img = obstacle.type === "asteroid" ? asteroidImg : alienImg;
-        ctx.drawImage(img, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+// Draw Asteroids
+function drawAsteroids() {
+    asteroids.forEach(asteroid => {
+        ctx.drawImage(asteroidImg, asteroid.x, asteroid.y, asteroid.width, asteroid.height);
     });
 }
 
@@ -127,19 +121,19 @@ function gameLoop() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     updateRocket();
-    updateObstacles();
+    updateAsteroids();
     drawRocket();
-    drawObstacles();
+    drawAsteroids();
     drawScore();
 
     requestAnimationFrame(gameLoop);
 }
 
-// Spawn Obstacles Every 1.5 Seconds
-setInterval(spawnObstacle, 1500);
+// Spawn Asteroids Every 1.5 Seconds
+setInterval(spawnAsteroid, 1500);
 
 // Increase Speed Every 10 Seconds
-setInterval(() => { obstacleSpeed += 1; }, 10000);
+setInterval(() => { asteroidSpeed += 1; }, 10000);
 
 // Start Game
 gameLoop();
